@@ -119,7 +119,7 @@
 
         .cliente-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
             gap: 20px;
@@ -158,7 +158,7 @@
 
         .criterios-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
         }
 
@@ -176,8 +176,8 @@
 
         .criterio-header {
             display: flex;
-            justify-content: between;
-            align-items: center;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 15px;
             gap: 10px;
         }
@@ -188,20 +188,28 @@
             flex: 1;
         }
 
-        .badge-inverso {
-            background: #ff9f43;
-            color: white;
+        .badge-tipo {
             padding: 3px 8px;
             border-radius: 12px;
             font-size: 0.7rem;
             font-weight: bold;
+            white-space: nowrap;
         }
 
+        .tipo-escala { background: #e3f2fd; color: #1565c0; }
+        .tipo-inverso { background: #fff3e0; color: #ef6c00; }
+        .tipo-meta { background: #e8f5e8; color: #2e7d32; }
+        .tipo-binario { background: #f3e5f5; color: #7b1fa2; }
+
+        .input-container {
+            margin-bottom: 10px;
+        }
+
+        /* Inputs de escala */
         .slider-container {
             display: flex;
             align-items: center;
             gap: 15px;
-            margin-bottom: 10px;
         }
 
         .slider {
@@ -223,15 +231,6 @@
             cursor: pointer;
         }
 
-        .slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-            border: none;
-        }
-
         .score-input {
             width: 60px;
             padding: 8px;
@@ -240,6 +239,77 @@
             border-radius: 8px;
             font-weight: bold;
             font-size: 1.1rem;
+        }
+
+        /* Inputs de meta */
+        .meta-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .meta-input {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .meta-input label {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .meta-input input {
+            padding: 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .meta-resultado {
+            background: #667eea;
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Inputs binários */
+        .binario-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .binario-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .binario-btn.sim {
+            border-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .binario-btn.nao {
+            border-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .binario-btn:hover {
+            transform: translateY(-2px);
         }
 
         .btn {
@@ -278,7 +348,7 @@
             margin-bottom: 30px;
         }
 
-        .add-form input {
+        .add-form input, .add-form select {
             width: 100%;
             padding: 15px;
             border: none;
@@ -314,12 +384,8 @@
             border-radius: 10px;
             margin-bottom: 10px;
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
-        }
-
-        .ranking-item:last-child {
-            margin-bottom: 0;
         }
 
         .criterios-table {
@@ -348,28 +414,17 @@
             text-align: center;
         }
 
-        .hidden {
-            display: none;
+        .peso-info {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .tabs {
-                flex-direction: column;
-            }
-            
-            .stats-grid {
+            .criterios-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .criterios-grid {
+            .meta-container {
                 grid-template-columns: 1fr;
             }
         }
@@ -405,7 +460,7 @@
                         <div class="stat-label">🌟 Excelentes</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" id="total-criterios">8</div>
+                        <div class="stat-number" id="total-criterios">9</div>
                         <div class="stat-label">⚙️ Critérios</div>
                     </div>
                 </div>
@@ -445,8 +500,8 @@
                         <thead>
                             <tr>
                                 <th>Critério</th>
-                                <th>Peso</th>
                                 <th>Tipo</th>
+                                <th>Peso</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -457,12 +512,36 @@
                 <div class="add-form">
                     <h3>➕ Adicionar Critério</h3>
                     <input type="text" id="novo-criterio-nome" placeholder="Ex: 🤝 Relação com a equipa">
+                    <select id="novo-criterio-tipo">
+                        <option value="escala">📊 Escala 0-10 (Normal)</option>
+                        <option value="inverso">🔄 Escala 0-10 (Inverso - problemas)</option>
+                        <option value="meta">🎯 Meta vs Realizado (%)</option>
+                        <option value="binario">✅ Sim/Não</option>
+                    </select>
                     <input type="number" id="novo-criterio-peso" placeholder="Peso (1-20)" value="8" min="1" max="20">
-                    <label style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
-                        <input type="checkbox" id="novo-criterio-inverso">
-                        🔄 Critério inverso (nota alta = problema baixo)
-                    </label>
                     <button class="btn btn-primary" onclick="adicionarCriterio()">Adicionar Critério</button>
+                </div>
+
+                <div class="card">
+                    <h3>💡 Tipos de Critérios</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="padding: 15px; background: #e3f2fd; border-radius: 10px;">
+                            <h4>📊 Escala Normal</h4>
+                            <p style="font-size: 0.9rem; margin-top: 5px;">Para qualidade, satisfação, etc. Maior = melhor</p>
+                        </div>
+                        <div style="padding: 15px; background: #fff3e0; border-radius: 10px;">
+                            <h4>🔄 Escala Inversa</h4>
+                            <p style="font-size: 0.9rem; margin-top: 5px;">Para problemas, atrasos, etc. Maior = pior</p>
+                        </div>
+                        <div style="padding: 15px; background: #e8f5e8; border-radius: 10px;">
+                            <h4>🎯 Meta vs Realizado</h4>
+                            <p style="font-size: 0.9rem; margin-top: 5px;">Ex: 6 posts feitos / 9 contratados = 67%</p>
+                        </div>
+                        <div style="padding: 15px; background: #f3e5f5; border-radius: 10px;">
+                            <h4>✅ Sim/Não</h4>
+                            <p style="font-size: 0.9rem; margin-top: 5px;">Para critérios binários. Sim=10, Não=0</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="export-section">
@@ -476,16 +555,17 @@
     </div>
 
     <script>
-        // Dados iniciais
+        // Dados iniciais com novos tipos
         let criteria = [
-            { id: "posts", nome: "📱 Quantidade de Posts", peso: 10 },
-            { id: "stories", nome: "📸 Quantidade de Stories", peso: 8 },
-            { id: "feed", nome: "🎨 Feed representa o posicionamento", peso: 10 },
-            { id: "surpresa", nome: "✨ Surpreendemos o Cliente", peso: 10 },
-            { id: "interacoes", nome: "💬 Interações/Engajamento", peso: 9 },
-            { id: "satisfacao", nome: "😊 Satisfação Percebida", peso: 10 },
-            { id: "cliente_ausente", nome: "👻 Cliente ausente", peso: 7, inverso: true },
-            { id: "pontos_pendentes", nome: "📋 Pontos pendentes", peso: 9, inverso: true },
+            { id: "posts", nome: "📱 Quantidade de Posts", peso: 10, tipo: "meta" },
+            { id: "stories", nome: "📸 Quantidade de Stories", peso: 8, tipo: "meta" },
+            { id: "feed", nome: "🎨 Feed representa o posicionamento", peso: 10, tipo: "escala" },
+            { id: "surpresa", nome: "✨ Surpreendemos o Cliente", peso: 10, tipo: "binario" },
+            { id: "interacoes", nome: "💬 Interações/Engajamento", peso: 9, tipo: "escala" },
+            { id: "satisfacao", nome: "😊 Satisfação Percebida", peso: 10, tipo: "escala" },
+            { id: "velocidade", nome: "⚡ Velocidade de Resposta", peso: 6, tipo: "escala" },
+            { id: "cliente_ausente", nome: "👻 Cliente ausente", peso: 7, tipo: "inverso" },
+            { id: "pontos_pendentes", nome: "📋 Pontos pendentes", peso: 9, tipo: "inverso" },
         ];
 
         let clientes = [
@@ -496,7 +576,7 @@
 
         let registos = {};
         
-        const STORAGE_KEY = "scorecard-dados";
+        const STORAGE_KEY = "scorecard-dados-v2";
 
         // Funções de Storage
         function carregarDados() {
@@ -517,7 +597,7 @@
             }));
         }
 
-        // Funções de cálculo
+        // Funções de cálculo melhoradas
         function calcularScore(clienteId) {
             const mes = getCurrentMonth();
             const clienteRegistos = registos[mes]?.[clienteId] || {};
@@ -526,8 +606,23 @@
             let pesoTotal = 0;
 
             criteria.forEach(criterio => {
-                const valor = Number(clienteRegistos[criterio.id] || 0);
-                const valorFinal = criterio.inverso ? (valor ? 11 - valor : 0) : valor;
+                const registro = clienteRegistos[criterio.id];
+                let valorFinal = 0;
+
+                if (criterio.tipo === 'escala') {
+                    valorFinal = Number(registro?.valor || 0);
+                } else if (criterio.tipo === 'inverso') {
+                    const valor = Number(registro?.valor || 0);
+                    valorFinal = valor > 0 ? (10 - valor + 1) : 10; // Inverte: 1->10, 10->1
+                } else if (criterio.tipo === 'meta') {
+                    const meta = Number(registro?.meta || 1);
+                    const realizado = Number(registro?.realizado || 0);
+                    const percentual = meta > 0 ? (realizado / meta) * 100 : 0;
+                    valorFinal = Math.min(10, percentual / 10); // 100% = 10 pontos
+                } else if (criterio.tipo === 'binario') {
+                    valorFinal = registro?.valor === 'sim' ? 10 : 0;
+                }
+
                 somaPonderada += valorFinal * criterio.peso;
                 pesoTotal += criterio.peso;
             });
@@ -548,6 +643,16 @@
             return { class: 'score-atencao', label: '⚠️ Atenção' };
         }
 
+        function getTipoBadge(tipo) {
+            const tipos = {
+                'escala': { class: 'tipo-escala', label: '📊 Escala' },
+                'inverso': { class: 'tipo-inverso', label: '🔄 Inverso' },
+                'meta': { class: 'tipo-meta', label: '🎯 Meta' },
+                'binario': { class: 'tipo-binario', label: '✅ Sim/Não' }
+            };
+            return tipos[tipo] || tipos['escala'];
+        }
+
         // Funções de interface
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -559,6 +664,78 @@
             if (tabName === 'painel') atualizarPainel();
             if (tabName === 'clientes') atualizarListaClientes();
             if (tabName === 'criterios') atualizarCriterios();
+        }
+
+        function criarInputCriterio(criterio, clienteId) {
+            const mes = getCurrentMonth();
+            const registro = registos[mes]?.[clienteId]?.[criterio.id] || {};
+            const tipoBadge = getTipoBadge(criterio.tipo);
+
+            let inputHTML = '';
+
+            if (criterio.tipo === 'escala' || criterio.tipo === 'inverso') {
+                const valor = registro.valor || 0;
+                const explicacao = criterio.tipo === 'inverso' ? 
+                    '(Menor = melhor para o score)' : 
+                    '(Maior = melhor para o score)';
+                inputHTML = `
+                    <div class="slider-container">
+                        <input type="range" class="slider" min="0" max="10" value="${valor}" 
+                               onchange="atualizarRegistro('${clienteId}', '${criterio.id}', 'valor', this.value)">
+                        <input type="number" class="score-input" min="0" max="10" value="${valor}"
+                               onchange="atualizarRegistro('${clienteId}', '${criterio.id}', 'valor', this.value)">
+                    </div>
+                    <div class="peso-info">${explicacao}</div>
+                `;
+            } else if (criterio.tipo === 'meta') {
+                const meta = registro.meta || '';
+                const realizado = registro.realizado || '';
+                const percentual = meta > 0 ? Math.round((realizado / meta) * 100) : 0;
+                inputHTML = `
+                    <div class="meta-container">
+                        <div class="meta-input">
+                            <label>Meta</label>
+                            <input type="number" value="${meta}" min="0"
+                                   onchange="atualizarRegistro('${clienteId}', '${criterio.id}', 'meta', this.value)">
+                        </div>
+                        <div class="meta-input">
+                            <label>Realizado</label>
+                            <input type="number" value="${realizado}" min="0"
+                                   onchange="atualizarRegistro('${clienteId}', '${criterio.id}', 'realizado', this.value)">
+                        </div>
+                        <div class="meta-resultado">
+                            ${percentual}%
+                        </div>
+                    </div>
+                `;
+            } else if (criterio.tipo === 'binario') {
+                const valor = registro.valor || 'nao';
+                inputHTML = `
+                    <div class="binario-container">
+                        <button class="binario-btn ${valor === 'sim' ? 'sim' : ''}" 
+                                onclick="atualizarRegistro('${clienteId}', '${criterio.id}', 'valor', 'sim')">
+                            ✅ SIM
+                        </button>
+                        <button class="binario-btn ${valor === 'nao' ? 'nao' : ''}" 
+                                onclick="atualizarRegistro('${clienteId}', '${criterio.id}', 'valor', 'nao')">
+                            ❌ NÃO
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="criterio-card">
+                    <div class="criterio-header">
+                        <div class="criterio-nome">${criterio.nome}</div>
+                        <div class="badge-tipo ${tipoBadge.class}">${tipoBadge.label}</div>
+                    </div>
+                    <div class="input-container">
+                        ${inputHTML}
+                    </div>
+                    <div class="peso-info">Peso: ${criterio.peso}</div>
+                </div>
+            `;
         }
 
         function atualizarPainel() {
@@ -635,26 +812,7 @@
                 const score = calcularScore(cliente.id);
                 const scoreInfo = getScoreClass(score);
                 
-                const criteriosHTML = criteria.map(criterio => {
-                    const mes = getCurrentMonth();
-                    const valor = registos[mes]?.[cliente.id]?.[criterio.id] || 0;
-                    
-                    return `
-                        <div class="criterio-card">
-                            <div class="criterio-header">
-                                <div class="criterio-nome">${criterio.nome}</div>
-                                ${criterio.inverso ? '<div class="badge-inverso">🔄 Inverso</div>' : ''}
-                            </div>
-                            <div class="slider-container">
-                                <input type="range" class="slider" min="0" max="10" value="${valor}" 
-                                       onchange="atualizarPontuacao('${cliente.id}', '${criterio.id}', this.value)">
-                                <input type="number" class="score-input" min="0" max="10" value="${valor}"
-                                       onchange="atualizarPontuacao('${cliente.id}', '${criterio.id}', this.value)">
-                            </div>
-                            <div style="font-size: 0.8rem; color: #6c757d; margin-top: 5px;">Peso: ${criterio.peso}</div>
-                        </div>
-                    `;
-                }).join('');
+                const criteriosHTML = criteria.map(criterio => criarInputCriterio(criterio, cliente.id)).join('');
 
                 return `
                     <div class="cliente-card">
@@ -674,25 +832,23 @@
         }
 
         function atualizarCriterios() {
-            const html = criteria.map(criterio => `
-                <tr>
-                    <td style="font-weight: 600;">${criterio.nome}</td>
-                    <td>
-                        <input type="number" value="${criterio.peso}" min="1" max="20" 
-                               style="width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 5px;"
-                               onchange="alterarPeso('${criterio.id}', this.value)">
-                    </td>
-                    <td>
-                        <span style="padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; 
-                                     background: ${criterio.inverso ? '#ff9f43' : '#00b894'}; color: white;">
-                            ${criterio.inverso ? '🔄 Inverso' : '➡️ Normal'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn btn-danger" onclick="removerCriterio('${criterio.id}')">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
+            const html = criteria.map(criterio => {
+                const tipoBadge = getTipoBadge(criterio.tipo);
+                return `
+                    <tr>
+                        <td style="font-weight: 600;">${criterio.nome}</td>
+                        <td><span class="badge-tipo ${tipoBadge.class}">${tipoBadge.label}</span></td>
+                        <td>
+                            <input type="number" value="${criterio.peso}" min="1" max="20" 
+                                   style="width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 5px;"
+                                   onchange="alterarPeso('${criterio.id}', this.value)">
+                        </td>
+                        <td>
+                            <button class="btn btn-danger" onclick="removerCriterio('${criterio.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
 
             document.getElementById('criterios-table-body').innerHTML = html;
         }
@@ -727,18 +883,18 @@
 
         function adicionarCriterio() {
             const nome = document.getElementById('novo-criterio-nome').value.trim();
+            const tipo = document.getElementById('novo-criterio-tipo').value;
             const peso = parseInt(document.getElementById('novo-criterio-peso').value) || 8;
-            const inverso = document.getElementById('novo-criterio-inverso').checked;
             
             if (!nome) return;
 
             const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            criteria.push({ id, nome, peso, inverso });
+            criteria.push({ id, nome, peso, tipo });
             
             // Limpar form
             document.getElementById('novo-criterio-nome').value = '';
+            document.getElementById('novo-criterio-tipo').value = 'escala';
             document.getElementById('novo-criterio-peso').value = '8';
-            document.getElementById('novo-criterio-inverso').checked = false;
             
             salvarDados();
             atualizarCriterios();
@@ -765,13 +921,14 @@
             }
         }
 
-        function atualizarPontuacao(clienteId, criterioId, valor) {
+        function atualizarRegistro(clienteId, criterioId, campo, valor) {
             const mes = getCurrentMonth();
             
             if (!registos[mes]) registos[mes] = {};
             if (!registos[mes][clienteId]) registos[mes][clienteId] = {};
+            if (!registos[mes][clienteId][criterioId]) registos[mes][clienteId][criterioId] = {};
             
-            registos[mes][clienteId][criterioId] = parseInt(valor) || 0;
+            registos[mes][clienteId][criterioId][campo] = valor;
             
             salvarDados();
             atualizarListaClientes();
