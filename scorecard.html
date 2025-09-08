@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📊 Scorecard de Clientes</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -19,7 +20,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -50,10 +51,12 @@
             border-radius: 15px;
             padding: 5px;
             margin-bottom: 30px;
+            overflow-x: auto;
         }
 
         .tab {
             flex: 1;
+            min-width: 120px;
             padding: 15px 20px;
             text-align: center;
             border: none;
@@ -62,6 +65,7 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s;
+            white-space: nowrap;
         }
 
         .tab.active {
@@ -205,7 +209,6 @@
             margin-bottom: 10px;
         }
 
-        /* Inputs de escala */
         .slider-container {
             display: flex;
             align-items: center;
@@ -241,7 +244,6 @@
             font-size: 1.1rem;
         }
 
-        /* Inputs de meta */
         .meta-container {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -279,7 +281,6 @@
             font-size: 0.9rem;
         }
 
-        /* Inputs binários */
         .binario-container {
             display: flex;
             gap: 10px;
@@ -338,6 +339,15 @@
 
         .btn-danger:hover {
             background: #c0392b;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
         }
 
         .add-form {
@@ -420,12 +430,125 @@
             margin-top: 5px;
         }
 
+        /* Histórico Styles */
+        .historico-controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .historico-controls select, .historico-controls input {
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            height: 400px;
+        }
+
+        .historico-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .meta-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .meta-progress {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .meta-progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+
+        .progress-green { background: #28a745; }
+        .progress-yellow { background: #ffc107; }
+        .progress-red { background: #dc3545; }
+
+        .delta-up { color: #28a745; font-weight: bold; }
+        .delta-down { color: #dc3545; font-weight: bold; }
+        .delta-neutral { color: #6c757d; font-weight: bold; }
+
+        .relatorio-section {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .relatorio-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .trend-up { color: #28a745; }
+        .trend-down { color: #dc3545; }
+        .trend-stable { color: #6c757d; }
+
         @media (max-width: 768px) {
             .criterios-grid {
                 grid-template-columns: 1fr;
             }
             .meta-container {
                 grid-template-columns: 1fr;
+            }
+            .historico-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .tabs {
+                flex-direction: column;
+            }
+            .tab {
+                min-width: auto;
             }
         }
     </style>
@@ -441,6 +564,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="showTab('painel')">📈 Painel</button>
                 <button class="tab" onclick="showTab('clientes')">👥 Clientes</button>
+                <button class="tab" onclick="showTab('historico')">📅 Histórico</button>
                 <button class="tab" onclick="showTab('criterios')">⚙️ Critérios</button>
             </div>
 
@@ -490,6 +614,80 @@
                     <button class="btn btn-primary" onclick="adicionarCliente()">Adicionar Cliente</button>
                 </div>
                 <div id="lista-clientes"></div>
+            </div>
+
+            <!-- Tab: Histórico -->
+            <div id="historico" class="tab-content">
+                <!-- Controles -->
+                <div class="historico-controls">
+                    <label><strong>📅 Ano:</strong></label>
+                    <select id="ano-selector" onchange="atualizarHistorico()">
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                    
+                    <label><strong>🗓️ Mês:</strong></label>
+                    <select id="mes-selector" onchange="atualizarComparacao()">
+                        <option value="">Todos os meses</option>
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+
+                    <button class="btn btn-primary" onclick="atualizarHistorico()">🔄 Atualizar</button>
+                </div>
+
+                <!-- 1. Evolução Individual -->
+                <div class="card">
+                    <h3>📊 Evolução Individual dos Clientes</h3>
+                    <div class="chart-container">
+                        <canvas id="evolucaoChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 2. Comparação Mensal -->
+                <div class="card">
+                    <h3>📈 Comparação Mensal</h3>
+                    <div id="comparacao-mensal"></div>
+                </div>
+
+                <!-- 3. Metas Anuais -->
+                <div class="card">
+                    <h3>🎯 Metas Anuais</h3>
+                    <div class="add-form">
+                        <h4>Definir Meta para Cliente</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <select id="meta-cliente">
+                                <option value="">Selecionar Cliente</option>
+                            </select>
+                            <input type="number" id="meta-score" placeholder="Score Alvo (ex: 8.5)" step="0.1" min="0" max="10">
+                            <button class="btn btn-success" onclick="definirMeta()">Definir Meta</button>
+                        </div>
+                    </div>
+                    <div class="historico-grid" id="metas-grid"></div>
+                </div>
+
+                <!-- 4. Relatórios Executivos -->
+                <div class="relatorio-section">
+                    <h3>📋 Relatórios Executivos</h3>
+                    <p>Exports e análises para apresentações</p>
+                    <div class="relatorio-buttons">
+                        <button class="btn btn-success" onclick="exportarRelatorioCompleto()">📊 Relatório Completo (JSON)</button>
+                        <button class="btn btn-success" onclick="exportarCSV()">📈 Dados CSV</button>
+                        <button class="btn btn-success" onclick="exportarResumoExecutivo()">📋 Resumo Executivo</button>
+                        <button class="btn btn-success" onclick="gerarRelatorioTendencias()">📉 Análise Tendências</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Tab: Critérios -->
@@ -575,8 +773,9 @@
         ];
 
         let registos = {};
+        let metas = {}; // { "2025": { "c1": { scoreAlvo: 8.5, obs: "Meta definida" }}}
         
-        const STORAGE_KEY = "scorecard-dados-v2";
+        const STORAGE_KEY = "scorecard-dados-v3";
 
         // Funções de Storage
         function carregarDados() {
@@ -586,6 +785,7 @@
                 criteria = parsed.criteria || criteria;
                 clientes = parsed.clientes || clientes;
                 registos = parsed.registos || {};
+                metas = parsed.metas || {};
             }
         }
 
@@ -593,13 +793,14 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
                 criteria,
                 clientes,
-                registos
+                registos,
+                metas
             }));
         }
 
         // Funções de cálculo melhoradas
-        function calcularScore(clienteId) {
-            const mes = getCurrentMonth();
+        function calcularScore(clienteId, mesEspecifico = null) {
+            const mes = mesEspecifico || getCurrentMonth();
             const clienteRegistos = registos[mes]?.[clienteId] || {};
             
             let somaPonderada = 0;
@@ -613,12 +814,12 @@
                     valorFinal = Number(registro?.valor || 0);
                 } else if (criterio.tipo === 'inverso') {
                     const valor = Number(registro?.valor || 0);
-                    valorFinal = valor > 0 ? (10 - valor + 1) : 10; // Inverte: 1->10, 10->1
+                    valorFinal = valor > 0 ? (11 - valor) : 10;
                 } else if (criterio.tipo === 'meta') {
                     const meta = Number(registro?.meta || 1);
                     const realizado = Number(registro?.realizado || 0);
                     const percentual = meta > 0 ? (realizado / meta) * 100 : 0;
-                    valorFinal = Math.min(10, percentual / 10); // 100% = 10 pontos
+                    valorFinal = Math.min(10, percentual / 10);
                 } else if (criterio.tipo === 'binario') {
                     valorFinal = registro?.valor === 'sim' ? 10 : 0;
                 }
@@ -653,6 +854,12 @@
             return tipos[tipo] || tipos['escala'];
         }
 
+        function getMonthName(monthKey) {
+            const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+            const [year, month] = monthKey.split("-");
+            return `${months[parseInt(month) - 1]} ${year}`;
+        }
+
         // Funções de interface
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -663,6 +870,10 @@
 
             if (tabName === 'painel') atualizarPainel();
             if (tabName === 'clientes') atualizarListaClientes();
+            if (tabName === 'historico') {
+                atualizarSeletorMetas();
+                atualizarHistorico();
+            }
             if (tabName === 'criterios') atualizarCriterios();
         }
 
@@ -738,8 +949,453 @@
             `;
         }
 
+        // Funções do Histórico
+        function atualizarHistorico() {
+            atualizarGraficoEvolucao();
+            atualizarComparacao();
+            atualizarMetas();
+        }
+
+        function atualizarGraficoEvolucao() {
+            const ano = document.getElementById('ano-selector').value;
+            const canvas = document.getElementById('evolucaoChart');
+            const ctx = canvas.getContext('2d');
+
+            // Gerar meses do ano
+            const meses = [];
+            for (let i = 1; i <= 12; i++) {
+                meses.push(`${ano}-${String(i).padStart(2, '0')}`);
+            }
+
+            // Preparar dados por cliente
+            const datasets = clientes.map((cliente, index) => {
+                const data = meses.map(mes => calcularScore(cliente.id, mes));
+                const colors = ['#667eea', '#764ba2', '#28a745', '#dc3545', '#ffc107', '#17a2b8'];
+                
+                return {
+                    label: cliente.nome,
+                    data: data,
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length] + '20',
+                    tension: 0.4,
+                    fill: false
+                };
+            });
+
+            // Destruir gráfico anterior se existir
+            if (window.evolucaoChart) {
+                window.evolucaoChart.destroy();
+            }
+
+            // Criar novo gráfico
+            window.evolucaoChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: meses.map(mes => getMonthName(mes)),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Evolução dos Scores - ${ano}`
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: {
+                                display: true,
+                                text: 'Score'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function atualizarComparacao() {
+            const mesAtual = document.getElementById('mes-selector').value;
+            const ano = document.getElementById('ano-selector').value;
+            
+            if (!mesAtual) {
+                document.getElementById('comparacao-mensal').innerHTML = '<p>Selecione um mês específico para ver a comparação.</p>';
+                return;
+            }
+
+            const mesAtualKey = `${ano}-${mesAtual}`;
+            const mesAnterior = getMesAnterior(mesAtualKey);
+
+            let html = `
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Atual (${getMonthName(mesAtualKey)})</th>
+                            <th>Anterior (${getMonthName(mesAnterior)})</th>
+                            <th>Diferença</th>
+                            <th>Tendência</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            clientes.forEach(cliente => {
+                const scoreAtual = calcularScore(cliente.id, mesAtualKey);
+                const scoreAnterior = calcularScore(cliente.id, mesAnterior);
+                const diferenca = (scoreAtual - scoreAnterior).toFixed(2);
+                
+                let deltaClass = 'delta-neutral';
+                let tendencia = '➡️ Estável';
+                
+                if (diferenca > 0.1) {
+                    deltaClass = 'delta-up';
+                    tendencia = '📈 Subindo';
+                } else if (diferenca < -0.1) {
+                    deltaClass = 'delta-down';
+                    tendencia = '📉 Descendo';
+                }
+
+                html += `
+                    <tr>
+                        <td><strong>${cliente.nome}</strong></td>
+                        <td>${scoreAtual}</td>
+                        <td>${scoreAnterior}</td>
+                        <td class="${deltaClass}">${diferenca > 0 ? '+' : ''}${diferenca}</td>
+                        <td>${tendencia}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('comparacao-mensal').innerHTML = html;
+        }
+
+        function getMesAnterior(mesKey) {
+            const [ano, mes] = mesKey.split('-');
+            let anoAnterior = parseInt(ano);
+            let mesAnterior = parseInt(mes) - 1;
+            
+            if (mesAnterior === 0) {
+                mesAnterior = 12;
+                anoAnterior -= 1;
+            }
+            
+            return `${anoAnterior}-${String(mesAnterior).padStart(2, '0')}`;
+        }
+
+        function atualizarSeletorMetas() {
+            const selector = document.getElementById('meta-cliente');
+            selector.innerHTML = '<option value="">Selecionar Cliente</option>';
+            
+            clientes.forEach(cliente => {
+                selector.innerHTML += `<option value="${cliente.id}">${cliente.nome}</option>`;
+            });
+        }
+
+        function definirMeta() {
+            const clienteId = document.getElementById('meta-cliente').value;
+            const scoreAlvo = parseFloat(document.getElementById('meta-score').value);
+            const ano = document.getElementById('ano-selector').value;
+            
+            if (!clienteId || !scoreAlvo) {
+                alert('Selecione um cliente e defina um score alvo');
+                return;
+            }
+            
+            if (!metas[ano]) metas[ano] = {};
+            if (!metas[ano][clienteId]) metas[ano][clienteId] = {};
+            
+            metas[ano][clienteId].scoreAlvo = scoreAlvo;
+            metas[ano][clienteId].definidaEm = new Date().toISOString();
+            
+            document.getElementById('meta-cliente').value = '';
+            document.getElementById('meta-score').value = '';
+            
+            salvarDados();
+            atualizarMetas();
+        }
+
+        function atualizarMetas() {
+            const ano = document.getElementById('ano-selector').value;
+            const metasAno = metas[ano] || {};
+            
+            let html = '';
+            
+            clientes.forEach(cliente => {
+                const meta = metasAno[cliente.id];
+                const scoreAtual = calcularScore(cliente.id);
+                
+                if (meta) {
+                    const progresso = Math.min(100, (scoreAtual / meta.scoreAlvo) * 100);
+                    let progressClass = 'progress-red';
+                    
+                    if (progresso >= 90) progressClass = 'progress-green';
+                    else if (progresso >= 70) progressClass = 'progress-yellow';
+                    
+                    html += `
+                        <div class="meta-card">
+                            <h4>${cliente.nome}</h4>
+                            <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                                <span>Atual: <strong>${scoreAtual}</strong></span>
+                                <span>Meta: <strong>${meta.scoreAlvo}</strong></span>
+                            </div>
+                            <div class="meta-progress">
+                                <div class="meta-progress-bar ${progressClass}" style="width: ${progresso}%"></div>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px;">
+                                <strong>${Math.round(progresso)}% da meta</strong>
+                            </div>
+                            <button class="btn btn-danger" style="margin-top: 10px; width: 100%;" 
+                                    onclick="removerMeta('${ano}', '${cliente.id}')">Remover Meta</button>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (!html) {
+                html = '<p style="text-align: center; color: #666; padding: 40px;">Nenhuma meta definida para este ano. Use o formulário acima para adicionar metas.</p>';
+            }
+            
+            document.getElementById('metas-grid').innerHTML = html;
+        }
+
+        function removerMeta(ano, clienteId) {
+            if (confirm('Remover meta para este cliente?')) {
+                if (metas[ano] && metas[ano][clienteId]) {
+                    delete metas[ano][clienteId];
+                }
+                salvarDados();
+                atualizarMetas();
+            }
+        }
+
+        // Funções de Export/Relatórios
+        function exportarRelatorioCompleto() {
+            const ano = document.getElementById('ano-selector').value;
+            const relatorio = {
+                ano: ano,
+                geradoEm: new Date().toISOString(),
+                clientes: clientes.length,
+                criterios: criteria.length,
+                dadosCompletos: {
+                    clientes: clientes,
+                    criteria: criteria,
+                    registos: registos,
+                    metas: metas
+                },
+                resumoAnual: {}
+            };
+
+            // Calcular resumo por mês
+            for (let mes = 1; mes <= 12; mes++) {
+                const mesKey = `${ano}-${String(mes).padStart(2, '0')}`;
+                const scores = clientes.map(c => calcularScore(c.id, mesKey));
+                const media = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+                
+                relatorio.resumoAnual[mesKey] = {
+                    media: Number(media.toFixed(2)),
+                    excelentes: scores.filter(s => s >= 8.5).length,
+                    atencao: scores.filter(s => s < 6.5).length
+                };
+            }
+
+            const blob = new Blob([JSON.stringify(relatorio, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_completo_${ano}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarCSV() {
+            const ano = document.getElementById('ano-selector').value;
+            let csv = 'Cliente,Mês,Score,Estado\n';
+            
+            clientes.forEach(cliente => {
+                for (let mes = 1; mes <= 12; mes++) {
+                    const mesKey = `${ano}-${String(mes).padStart(2, '0')}`;
+                    const score = calcularScore(cliente.id, mesKey);
+                    const estado = getScoreClass(score).label.replace('🌟 ', '').replace('⚡ ', '').replace('⚠️ ', '');
+                    
+                    csv += `"${cliente.nome}","${getMonthName(mesKey)}",${score},"${estado}"\n`;
+                }
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dados_${ano}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarResumoExecutivo() {
+            const ano = document.getElementById('ano-selector').value;
+            const mesAtual = getCurrentMonth();
+            
+            const resumo = {
+                titulo: `Resumo Executivo - ${ano}`,
+                geradoEm: new Date().toLocaleDateString('pt-PT'),
+                kpis: {
+                    totalClientes: clientes.length,
+                    mediaGeral: calcularMediaGeral(),
+                    clientesExcelentes: contarClientesPorEstado('excelente'),
+                    clientesAtencao: contarClientesPorEstado('atencao')
+                },
+                topPerformers: obterTopPerformers(3),
+                bottomPerformers: obterBottomPerformers(3),
+                tendencias: calcularTendencias(),
+                recomendacoes: gerarRecomendacoes()
+            };
+
+            const blob = new Blob([JSON.stringify(resumo, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `resumo_executivo_${ano}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function gerarRelatorioTendencias() {
+            const ano = document.getElementById('ano-selector').value;
+            const tendencias = {
+                titulo: `Análise de Tendências - ${ano}`,
+                analise: {},
+                alertas: [],
+                oportunidades: []
+            };
+
+            clientes.forEach(cliente => {
+                const scores = [];
+                for (let mes = 1; mes <= 12; mes++) {
+                    const mesKey = `${ano}-${String(mes).padStart(2, '0')}`;
+                    scores.push(calcularScore(cliente.id, mesKey));
+                }
+
+                const tendencia = calcularTendenciaCliente(scores);
+                tendencias.analise[cliente.id] = {
+                    nome: cliente.nome,
+                    tendencia: tendencia,
+                    scoreMinimo: Math.min(...scores),
+                    scoreMaximo: Math.max(...scores),
+                    scoreAtual: scores[scores.length - 1]
+                };
+
+                // Gerar alertas
+                if (tendencia === 'decrescente') {
+                    tendencias.alertas.push(`⚠️ ${cliente.nome}: Tendência de queda no score`);
+                }
+
+                if (tendencia === 'crescente') {
+                    tendencias.oportunidades.push(`📈 ${cliente.nome}: Melhoria consistente`);
+                }
+            });
+
+            const blob = new Blob([JSON.stringify(tendencias, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analise_tendencias_${ano}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Funções auxiliares
+        function calcularMediaGeral() {
+            const scores = clientes.map(c => calcularScore(c.id));
+            return scores.length > 0 ? Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)) : 0;
+        }
+
+        function contarClientesPorEstado(estado) {
+            return clientes.filter(c => {
+                const score = calcularScore(c.id);
+                if (estado === 'excelente') return score >= 8.5;
+                if (estado === 'atencao') return score < 6.5;
+                return score >= 6.5 && score < 8.5;
+            }).length;
+        }
+
+        function obterTopPerformers(n) {
+            return clientes.map(c => ({
+                nome: c.nome,
+                score: calcularScore(c.id)
+            })).sort((a, b) => b.score - a.score).slice(0, n);
+        }
+
+        function obterBottomPerformers(n) {
+            return clientes.map(c => ({
+                nome: c.nome,
+                score: calcularScore(c.id)
+            })).sort((a, b) => a.score - b.score).slice(0, n);
+        }
+
+        function calcularTendencias() {
+            const mesAtual = getCurrentMonth();
+            const mesAnterior = getMesAnterior(mesAtual);
+            
+            let subindo = 0, descendo = 0, estavel = 0;
+            
+            clientes.forEach(c => {
+                const atual = calcularScore(c.id, mesAtual);
+                const anterior = calcularScore(c.id, mesAnterior);
+                const diff = atual - anterior;
+                
+                if (diff > 0.1) subindo++;
+                else if (diff < -0.1) descendo++;
+                else estavel++;
+            });
+            
+            return { subindo, descendo, estavel };
+        }
+
+        function calcularTendenciaCliente(scores) {
+            if (scores.length < 2) return 'insuficiente';
+            
+            const primeirosQuatro = scores.slice(0, 4);
+            const ultimosQuatro = scores.slice(-4);
+            
+            const mediaPrimeiros = primeirosQuatro.reduce((a, b) => a + b, 0) / primeirosQuatro.length;
+            const mediaUltimos = ultimosQuatro.reduce((a, b) => a + b, 0) / ultimosQuatro.length;
+            
+            const diferenca = mediaUltimos - mediaPrimeiros;
+            
+            if (diferenca > 0.5) return 'crescente';
+            if (diferenca < -0.5) return 'decrescente';
+            return 'estável';
+        }
+
+        function gerarRecomendacoes() {
+            const recomendacoes = [];
+            const mediaGeral = calcularMediaGeral();
+            
+            if (mediaGeral < 7) {
+                recomendacoes.push("📊 Média geral baixa. Revisar estratégias de atendimento.");
+            }
+            
+            const clientesAtencao = contarClientesPorEstado('atencao');
+            if (clientesAtencao > 0) {
+                recomendacoes.push(`⚠️ ${clientesAtencao} cliente(s) precisam de atenção imediata.`);
+            }
+            
+            if (recomendacoes.length === 0) {
+                recomendacoes.push("🌟 Performance geral satisfatória. Manter estratégia atual.");
+            }
+            
+            return recomendacoes;
+        }
+
+        // Funções existentes (mantidas)
         function atualizarPainel() {
-            // Stats
             const totalClientes = clientes.length;
             const scores = clientes.map(c => calcularScore(c.id));
             const mediaGeral = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2) : 0;
@@ -751,13 +1407,11 @@
             document.getElementById('clientes-excelentes').textContent = excelentes;
             document.getElementById('total-criterios').textContent = totalCriterios;
 
-            // Rankings
             const clientesComScore = clientes.map(c => ({
                 ...c,
                 score: calcularScore(c.id)
             })).sort((a, b) => b.score - a.score);
 
-            // Top 3
             const topHTML = clientesComScore.slice(0, 3).map((c, index) => {
                 const medals = ['🥇', '🥈', '🥉'];
                 return `
@@ -769,7 +1423,6 @@
             }).join('');
             document.getElementById('top-ranking').innerHTML = topHTML;
 
-            // Bottom 3
             const bottomHTML = clientesComScore.slice(-3).reverse().map(c => `
                 <div class="ranking-item">
                     <div>⚠️ ${c.nome}</div>
@@ -778,7 +1431,6 @@
             `).join('');
             document.getElementById('bottom-ranking').innerHTML = bottomHTML;
 
-            // Tabela resumo
             const resumoHTML = `
                 <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                     <thead>
@@ -853,7 +1505,6 @@
             document.getElementById('criterios-table-body').innerHTML = html;
         }
 
-        // Funções de ação
         function adicionarCliente() {
             const nome = document.getElementById('novo-cliente').value.trim();
             if (!nome) return;
@@ -865,20 +1516,25 @@
             salvarDados();
             atualizarListaClientes();
             atualizarPainel();
+            atualizarSeletorMetas();
         }
 
         function removerCliente(id) {
             if (!confirm('Remover este cliente?')) return;
             clientes = clientes.filter(c => c.id !== id);
             
-            // Remover registos
             Object.keys(registos).forEach(mes => {
                 if (registos[mes][id]) delete registos[mes][id];
+            });
+            
+            Object.keys(metas).forEach(ano => {
+                if (metas[ano][id]) delete metas[ano][id];
             });
             
             salvarDados();
             atualizarListaClientes();
             atualizarPainel();
+            atualizarSeletorMetas();
         }
 
         function adicionarCriterio() {
@@ -891,7 +1547,6 @@
             const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_');
             criteria.push({ id, nome, peso, tipo });
             
-            // Limpar form
             document.getElementById('novo-criterio-nome').value = '';
             document.getElementById('novo-criterio-tipo').value = 'escala';
             document.getElementById('novo-criterio-peso').value = '8';
@@ -936,13 +1591,13 @@
         }
 
         function exportarDados() {
-            const dados = { criteria, clientes, registos };
+            const dados = { criteria, clientes, registos, metas };
             const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             
             const a = document.createElement('a');
             a.href = url;
-            a.download = `scorecard_${getCurrentMonth()}.json`;
+            a.download = `scorecard_completo_${getCurrentMonth()}.json`;
             a.click();
             
             URL.revokeObjectURL(url);
@@ -960,6 +1615,7 @@
                         criteria = dados.criteria;
                         clientes = dados.clientes;
                         registos = dados.registos;
+                        metas = dados.metas || {};
                         salvarDados();
                         atualizarPainel();
                         atualizarListaClientes();
@@ -981,9 +1637,12 @@
             atualizarPainel();
             atualizarListaClientes();
             atualizarCriterios();
+            
+            // Definir mês atual no seletor
+            const mesAtual = getCurrentMonth().split('-')[1];
+            document.getElementById('mes-selector').value = mesAtual;
         });
 
-        // Enter para adicionar
         document.getElementById('novo-cliente').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') adicionarCliente();
         });
